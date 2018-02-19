@@ -1,7 +1,7 @@
 /*
   Simple Java implementation of the Davis–Putnam–Logemann–Loveland (DPLL) algorithm
   ( https://en.wikipedia.org/wiki/DPLL_algorithm )
-  including OLL (one-literal-rule) and PLL (pure-literal-rule)
+  including OLR (one-literal-rule) and PLR (pure-literal-rule)
 
   Checks whether a given formula is satisfiable or not
 
@@ -71,40 +71,40 @@ public class Dpll {
 
     ArrayList<String> literals = formula.getLiteralsLex();
 
-    // First: Check if OLL is usable
-    int oll = 0; // 0 = none, 1 = left/true, 2 = right/false
+    // First: Check if OLR is usable
+    int rule = 0; // 0 = none, 1 = left/true, 2 = right/false
     String lit = null;
-    ollLoop:for(Clause clause : formula.getClauses()) {
+    olrLoop:for(Clause clause : formula.getClauses()) {
       if(clause.getLiterals().size() == 1) {
         lit = clause.getLiterals().get(0);
         if(lit.startsWith("-")) {
           lit = lit.replaceFirst("-","");
-          oll = 2;
+          rule = 2;
         } else {
-          oll = 1;
+          rule = 1;
         }
-        log(tabs, "OLL: " + lit + " => " + (oll == 1 ? "true" : "false"));
-        break ollLoop;
+        log(tabs, "OLR: " + lit + " => " + (rule == 1 ? "true" : "false"));
+        break olrLoop;
       }
     }
 
-    if(oll == 0) {
-      // Only look for PLL if OLL is not usable
-      // since OLL has a higher priority than OLL
-      pllLoop:for(Clause c : formula.getClauses()) {
+    if(rule == 0) {
+      // Only look for PLR if OLR is not usable
+      // since OLR has a higher priority than OLR
+      plrLoop:for(Clause c : formula.getClauses()) {
         for(String literal : c.getLiterals()) {
           String opposite = literal.startsWith("-") ? literal.replaceFirst("-","") : "-" + literal;
           if(!formula.containsLiteral(opposite)) {
-            // found PLL
+            // found PLR
             if(literal.startsWith("-")) {
               lit = literal.replaceFirst("-","");
-              oll = 2;
+              rule = 2;
             } else {
               lit = literal;
-              oll = 1;
+              rule = 1;
             }
-            log(tabs, "PLL: " + literal + " => " + (oll == 1 ? "true" : "false"));
-            break pllLoop;
+            log(tabs, "PLR: " + lit + " => " + (rule == 1 ? "true" : "false"));
+            break plrLoop;
           }
         }
       }
@@ -114,9 +114,9 @@ public class Dpll {
       lit = literals.get(0);
     }
 
-    // Don't do this if OLL result was 2
+    // Don't do this if OLR result was 2
     // since that would mean we skip the true case and set x := false
-    if(oll == 0 || oll == 1) {
+    if(rule == 0 || rule == 1) {
       // Left part ( x:= true)
       Formula newFormulaL = Formula.copy(formula);
       HashMap<String, Boolean> newSettingsL = (HashMap<String, Boolean>) variableSetting.clone();
@@ -137,9 +137,9 @@ public class Dpll {
         return resultL;
       }
     }
-    // Don't do this if OLL result was 1
+    // Don't do this if OLR result was 1
     // since that would mean we skip the false case and set x := true
-    if(oll == 0 || oll == 2) {
+    if(rule == 0 || rule == 2) {
       // Right part ( x:= false )
       Formula newFormulaR = Formula.copy(formula);
       HashMap<String, Boolean> newSettingsR = (HashMap<String, Boolean>) variableSetting.clone();
